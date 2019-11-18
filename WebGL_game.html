@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!--
+    Game made by:
+        Ricardo Rodrigues Azevedo nºmec:84730
+
+    -->
+    <title>Game</title>
+    <meta http-equiv="content-type" content="text/html" charset="UTF-8">
+
+    <script type="text/javascript">
+
+        var gl = null;
+
+        function intiWebGL(canvas) {
+
+            try {
+                gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+
+                gl.clearColor(0.0, 0.0, 0.0, 1.0);
+
+                // Buttons
+            } catch (e) {
+            }
+
+            if (!gl) {
+                alert("WebGL not initialise :(");
+            }
+
+        }
+
+        function render() {
+
+            gl.clear(gl.COLOR_BUFFER_BIT);
+
+        }
+
+        function runWebGL() {
+
+            var canvas = document.getElementById("game_window");
+
+            canvas.width = window.innerWidth - 15;
+            canvas.height = window.innerHeight - 20;
+            window.addEventListener('resize',runWebGL,false)
+
+            intiWebGL(canvas);
+
+            render();
+
+        }
+
+    </script>
+</head>
+<body onload="runWebGL();">
+
+<canvas id="game_window" style="border: none; alignment: center"></canvas>
+
+</body>
+</html>
