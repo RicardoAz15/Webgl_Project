@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <!--
     Game made by:
@@ -8,53 +8,50 @@
     -->
     <title>Game</title>
     <meta http-equiv="content-type" content="text/html" charset="UTF-8">
+    <style> body {background: black;}</style>
 
-    <script type="text/javascript">
+    <script id="shader-vs" type="x-shader/x-vertex">
 
-        var gl = null;
+        attribute vec3 aVertexPosition;
 
-        function intiWebGL(canvas) {
+        attribute vec3 aVertexColor;
 
-            try {
-                gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+        varying vec4 vertexColor;
 
-                gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        void main(void) {
 
-                // Buttons
-            } catch (e) {
-            }
+            // Just converting the (x,y,z) vertices to Homogeneous Coord.
 
-            if (!gl) {
-                alert("WebGL not initialise :(");
-            }
+            gl_Position = vec4(aVertexPosition, 1.0);
 
+            // And the RGB color value to RGBA
+
+            vertexColor = vec4(aVertexColor, 1.0);
         }
-
-        function render() {
-
-            gl.clear(gl.COLOR_BUFFER_BIT);
-
-        }
-
-        function runWebGL() {
-
-            var canvas = document.getElementById("game_window");
-
-            canvas.width = window.innerWidth - 15;
-            canvas.height = window.innerHeight - 20;
-            window.addEventListener('resize',runWebGL,false)
-
-            intiWebGL(canvas);
-
-            render();
-
-        }
-
     </script>
+
+    <script id="shader-fs" type="x-shader/x-fragment">
+
+        precision mediump float;
+
+        varying vec4 vertexColor;
+
+        void main(void) {
+
+            // Using the passed vertex color
+
+            gl_FragColor = vertexColor;
+        }
+    </script>
+
+    <script type="text/javascript" src="maths.js"></script>
+    <script type="text/javascript" src="initShaders.js"></script>
+    <script type="text/javascript" src="WebGL_game.js"></script>
+
 </head>
 <body onload="runWebGL();">
 
-<canvas id="game_window" style="border: none; alignment: center"></canvas>
+<canvas id="game_window" style="border: none; alignment: center; margin-top: 2px "></canvas>
 
 </body>
 </html>
