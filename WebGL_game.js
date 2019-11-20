@@ -5,13 +5,13 @@ var triangleVertexColorBuffer = null;
 var shaderProgram = null;
 
 var vertices = [
-    -0.25, 0.90, -0.75,
+    -0.25, 0.00, 0.00,
     -0.75, -1.00, -0.75,
     0.75, -1.00, -0.75,
 
-    -0.25, 0.90, -0.75,
+    -0.25, 0.00, 0.00,
     0.75, -1.00, -0.75,
-    0.25, 0.90, -0.75,
+    0.25, 0.00, 0.00,
 ];
 
 var colors = [
@@ -48,6 +48,7 @@ function initBuffers() {
 
 }
 
+
 function initWebGL(canvas) {
 
     try {
@@ -74,13 +75,11 @@ function render() {
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
 
-    var pMatrix = perspective( 45, 1, 0.05, 10 );
+    var pMatrix = perspective( 45, 1, 0.00, 10 );
     var pUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
     gl.uniformMatrix4fv(pUniform, false, new Float32Array(flatten(pMatrix)));
 
-
     gl.drawArrays(gl.TRIANGLES,0, triangle_Vertex_Position_Buffer.numItems);
-
 }
 
 function runWebGL() {

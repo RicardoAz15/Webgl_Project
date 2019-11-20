@@ -52,15 +52,15 @@ function initShaders( gl ) {
 
 	gl.useProgram(shaderProgram);
 
-	// Coordinates 
+	// Coordinates
 
 	shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
 	gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
 
-	// Colors 
+	// Colors
 
 	shaderProgram.vertexColorAttribute = gl.getAttribLocation(shaderProgram, "aVertexColor");
 	gl.enableVertexAttribArray(shaderProgram.vertexColorAttribute);
 
 	return shaderProgram;
-}
+} 
