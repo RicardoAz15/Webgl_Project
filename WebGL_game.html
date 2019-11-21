@@ -12,42 +12,66 @@
 
     <script id="shader-vs" type="x-shader/x-vertex">
 
-        attribute vec3 aVertexPosition;
+    attribute vec3 aVertexPosition;
 
-        attribute vec3 aVertexColor;
+    attribute vec3 aVertexColor;
 
-        varying vec4 vertexColor;
+    uniform mat4 uMVMatrix;
 
-        void main(void) {
+    uniform mat4 uPMatrix;
 
-            // Just converting the (x,y,z) vertices to Homogeneous Coord.
+    varying vec4 vertexColor;
 
-            gl_Position = vec4(aVertexPosition, 1.0);
+    void main(void) {
 
-            // And the RGB color value to RGBA
+		// To allow seeing the points drawn
 
-            vertexColor = vec4(aVertexColor, 1.0);
-        }
-    </script>
+		gl_PointSize = 5.0;
+
+		// Just converting the (x,y,z) vertices to Homogeneous Coord.
+
+		// And multiplying by the Projection and the Model-View matrix
+
+        gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+
+        // Converting the RGB color value to RGBA
+
+        vertexColor = vec4(aVertexColor, 1.0);
+    }
+</script>
 
     <script id="shader-fs" type="x-shader/x-fragment">
 
-        precision mediump float;
+	precision mediump float;
 
-        varying vec4 vertexColor;
+	varying vec4 vertexColor;
 
-        void main(void) {
+	void main(void) {
 
-            // Using the passed vertex color
+		// Using the passed vertex color
 
-            gl_FragColor = vertexColor;
-        }
-    </script>
+		gl_FragColor = vertexColor;
+	}
+
+</script>
+
+    <!-- The JS files -->
+
+    <!-- Some useful functions for browser compatibility -->
+
+    <script type="text/javascript" src="webgl-utils.js"></script>
+
+    <!-- Handling vectors and matrices -->
+
     <script type="text/javascript" src="maths.js"></script>
+
+    <!-- WebGL code -->
+
     <script type="text/javascript" src="initShaders.js"></script>
+
     <script type="text/javascript" src="WebGL_game.js"></script>
 
-
+    <script type="text/javascript" src="obstacle_generator.js"></script>
 </head>
 <body onload="runWebGL();">
 

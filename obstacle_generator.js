@@ -1,6 +1,6 @@
 
-
 const obstacles_type = ["cube","sphere","wall"];
+
 const initial_Coordinates = [
     1.00,1.00,10.00,
 
@@ -44,8 +44,6 @@ function next_obstacle() {
     var number = random_number(0,2);
 
     var obstacles_type_selected = obstacles_type[number]
-
-
 
 }
 

@@ -63,4 +63,4 @@ function initShaders( gl ) {
 	gl.enableVertexAttribArray(shaderProgram.vertexColorAttribute);
 
 	return shaderProgram;
-} 
+}
