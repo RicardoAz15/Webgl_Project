@@ -1,81 +1,105 @@
 <!DOCTYPE html>
-<html lang="en">
+
+<html>
+
 <head>
-    <!--
-    Game made by:
-        Ricardo Rodrigues Azevedo nºmec:84730
+	
+<!--
 
-    -->
-    <title>Game</title>
-    <meta http-equiv="content-type" content="text/html" charset="UTF-8">
-    <style> body {background: black;}</style>
+WebGL_game.html
 
-    <script id="shader-vs" type="x-shader/x-vertex">
+Applying a texture and blending
 
+J. Madeira - November 2015
+
+-->
+	
+<title>WebGL example 29 &mdash; Textures and Blending</title>
+
+<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+
+<!--
+
+The vertex and fragment shaders.
+
+-->
+
+<script id="shader-vs" type="x-shader/x-vertex">
+	
     attribute vec3 aVertexPosition;
-
-    attribute vec3 aVertexColor;
+  
+    attribute vec2 aTextureCoord;
 
     uniform mat4 uMVMatrix;
-
+    
     uniform mat4 uPMatrix;
 
-    varying vec4 vertexColor;
+    varying vec2 vTextureCoord;
+    
+    varying vec3 vLightWeighting;
 
     void main(void) {
-
-		// To allow seeing the points drawn
-
-		gl_PointSize = 5.0;
-
-		// Just converting the (x,y,z) vertices to Homogeneous Coord.
-
-		// And multiplying by the Projection and the Model-View matrix
-
+		
         gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+        
+        // For the fragment shader
+        
+        vTextureCoord = aTextureCoord;
 
-        // Converting the RGB color value to RGBA
-
-        vertexColor = vec4(aVertexColor, 1.0);
+        vLightWeighting = vec3(1.0, 1.0, 1.0);
     }
 </script>
 
-    <script id="shader-fs" type="x-shader/x-fragment">
+<script id="shader-fs" type="x-shader/x-fragment">
+	
+    precision mediump float;
 
-	precision mediump float;
+    varying vec2 vTextureCoord;
+    
+    varying vec3 vLightWeighting;
 
-	varying vec4 vertexColor;
+    uniform float uAlpha;
 
-	void main(void) {
+    uniform sampler2D uSampler;
 
-		// Using the passed vertex color
+    uniform vec4 u_color;
 
-		gl_FragColor = vertexColor;
-	}
-
+    void main(void) {
+		
+        vec4 textureColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
+        
+        gl_FragColor = vec4(textureColor.rgb * vLightWeighting, textureColor.a * uAlpha) * u_color;
+    }
+    
 </script>
 
-    <!-- The JS files -->
 
-    <!-- Some useful functions for browser compatibility -->
+<!-- The JS files -->
 
-    <script type="text/javascript" src="webgl-utils.js"></script>
+<!-- Some useful functions for browser compatibility -->
 
-    <!-- Handling vectors and matrices -->
+<script type="text/javascript" src="webgl-utils.js"></script>
 
-    <script type="text/javascript" src="maths.js"></script>
+<!-- Handling vectors and matrices -->
 
-    <!-- WebGL code -->
+<script type="text/javascript" src="maths.js"></script>
 
-    <script type="text/javascript" src="initShaders.js"></script>
+<!-- WebGL code -->
 
-    <script type="text/javascript" src="WebGL_game.js"></script>
+<script type="text/javascript" src="initShaders.js"></script>
 
-    <script type="text/javascript" src="obstacle_generator.js"></script>
+<script type="text/javascript" src="WebGL_game.js"></script>
+
 </head>
+
 <body onload="runWebGL();">
 
-<canvas id="game_window" style="border: none; alignment: center; margin-top: 2px "></canvas>
+	<div style="text-align: center">
+		<p id="fps"> fps: </p>
+		<canvas id="game_window" style="border: none; alignment: center; margin-top: 2px "></canvas>
+				
+	</div>
 
 </body>
+
 </html>

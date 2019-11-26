@@ -473,6 +473,33 @@ function translationMatrix( tx, ty, tz )
 }
 
 //----------------------------------------------------------------------------
+//
+//  Projection Matrix Generators - Angel / Shreiner
+//
+
+function ortho( left, right, bottom, top, near, far )
+{
+    if ( left == right ) { throw "ortho(): left and right are equal"; }
+    if ( bottom == top ) { throw "ortho(): bottom and top are equal"; }
+    if ( near == far )   { throw "ortho(): near and far are equal"; }
+
+    var w = right - left;
+    var h = top - bottom;
+    var d = far - near;
+
+    var result = mat4();
+    
+    result[0][0] = 2.0 / w;
+    result[1][1] = 2.0 / h;
+    result[2][2] = -2.0 / d;
+    result[0][3] = -(left + right) / w;
+    result[1][3] = -(top + bottom) / h;
+    result[2][3] = -(near + far) / d;
+
+    return result;
+}
+
+//----------------------------------------------------------------------------
 
 function perspective( fovy, aspect, near, far )
 {
@@ -489,14 +516,6 @@ function perspective( fovy, aspect, near, far )
     result[3][3] = 0.0;
 
     return result;
-}
-
-//----------------------------------------------------------------------------
-/*
-Random generator
- */
-function random_number(x1, x2) {
-    return Math.random() * (x2 - x1) + x1;
 }
 
 

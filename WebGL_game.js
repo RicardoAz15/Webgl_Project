@@ -1,162 +1,261 @@
-var gl = null;
-var canvas = null;
+//////////////////////////////////////////////////////////////////////////////
+//
+//  WebGL_game.js
+//
+//  Applying a texture and blending
+//
+//  Adapted from learningwebgl.com
+//
+//  J. Madeira - November 2015
+//
+//////////////////////////////////////////////////////////////////////////////
 
-// Buffers
-var VertexPositionBuffer = null;
-var VertexColorBuffer = null;
-var VertexIndexBuffer = null;
-var PlayerVertexIndexBuffer = null;
+
+//----------------------------------------------------------------------------
+//
+// Global Variables
+//
+
+var gl = null; // WebGL context
 
 var shaderProgram = null;
 
-var tx = 0;
+// NEW --- Buffers
 
-var positional = [
-    // Plane
-    -0.65, -1.0,  1.0,
-    0.65, -1.0,  1.0,
-    0.65,  2.0,  1.0,
-    -0.65,  2.0,  1.0,
+var cubeVertexPositionBuffer = null;
 
-    // Player
-        -1.0, -1.0,  1.0,
-        1.0, -1.0,  1.0,
-        1.0,  1.0,  1.0,
-        -1.0,  1.0,  1.0,
+var cubeVertexIndexBuffer = null;
 
-        -1.0, -1.0, -1.0,
-        -1.0,  1.0, -1.0,
-        1.0,  1.0, -1.0,
-        1.0, -1.0, -1.0,
+var cubeVertexTextureCoordBuffer;
 
+// The global transformation parameters
+
+// velocity
+
+var velocity = 0.0;
+var velocity_dir = 1;
+
+// on the move?
+
+var is_moving = true;
+
+// The translation vector
+
+var tz = 0.0;
+
+var tm = 0.0;
+
+// To allow choosing the way of drawing the model triangles
+
+var primitiveType = null;
+
+// From learningwebgl.com
+
+// NEW --- Storing the vertices defining the cube faces
+
+vertices = [
+    // Front face
+    -1.0, -1.0, 1.0,
+    1.0, -1.0, 1.0,
+    1.0, 1.0, 1.0,
+    -1.0, 1.0, 1.0,
+
+    // Back face
+    -1.0, -1.0, -1.0,
+    -1.0, 1.0, -1.0,
+    1.0, 1.0, -1.0,
+    1.0, -1.0, -1.0,
+
+    // Top face
+    -1.0, 1.0, -1.0,
+    -1.0, 1.0, 1.0,
+    1.0, 1.0, 1.0,
+    1.0, 1.0, -1.0,
+
+    // Bottom face
+    -1.0, -1.0, -1.0,
+    1.0, -1.0, -1.0,
+    1.0, -1.0, 1.0,
+    -1.0, -1.0, 1.0,
+
+    // Right face
+    1.0, -1.0, -1.0,
+    1.0, 1.0, -1.0,
+    1.0, 1.0, 1.0,
+    1.0, -1.0, 1.0,
+
+    // Left face
+    -1.0, -1.0, -1.0,
+    -1.0, -1.0, 1.0,
+    -1.0, 1.0, 1.0,
+    -1.0, 1.0, -1.0
 ];
 
-var colors = [
-    0.00 ,   0.00 ,   1.00,
-    0.00 ,   0.00 ,   1.00,
-    0.00 ,   0.00 ,   1.00,
-    0.00 ,   0.00 ,   1.00,
+// Texture coordinates for the quadrangular faces
 
-    0.00 ,   0.00 ,   1.00,
-    0.00 ,   0.00 ,   1.00,
-    0.00 ,   0.00 ,   1.00,
-    0.00 ,   0.00 ,   1.00
+// Notice how they are assigne to the corresponding vertices
+
+var textureCoords = [
+
+    // Front face
+    0.0, 0.0,
+    5.0, 0.0,
+    5.0, 5.0,
+    0.0, 5.0,
+
+    // Back face
+    1.0, 0.0,
+    1.0, 1.0,
+    0.0, 1.0,
+    0.0, 0.0,
+
+    // Top face
+    0.0, 1.0,
+    0.0, 0.0,
+    1.0, 0.0,
+    1.0, 1.0,
+
+    // Bottom face
+    1.0, 1.0,
+    0.0, 1.0,
+    0.0, 0.0,
+    1.0, 0.0,
+
+    // Right face
+    1.0, 0.0,
+    1.0, 1.0,
+    0.0, 1.0,
+    0.0, 0.0,
+
+    // Left face
+    0.0, 0.0,
+    1.0, 0.0,
+    1.0, 1.0,
+    0.0, 1.0,
 ];
 
-var plane_vertices_index = [
-    0, 1, 2,      0, 2, 3,    // plane
+// Vertex indices defining the triangles
 
+var cubeVertexIndices = [
+
+    0, 1, 2, 0, 2, 3,    // Front face
+
+    4, 5, 6, 4, 6, 7,    // Back face
+
+    8, 9, 10, 8, 10, 11,  // Top face
+
+    12, 13, 14, 12, 14, 15, // Bottom face
+
+    16, 17, 18, 16, 18, 19, // Right face
+
+    20, 21, 22, 20, 22, 23  // Left face
 ];
 
-var player_vertices_index = [
-    0, 1, 2,      0, 2, 3,    // Front face
 
-    4, 5, 6,      4, 6, 7,    // Back face
+//----------------------------------------------------------------------------
+//
+// The WebGL code
+//
 
-    3, 2, 6,     3, 6, 5,  // Top face
+//----------------------------------------------------------------------------
+//
+//  Rendering
+//
 
-    0, 1, 7,   0, 7, 4, // Bottom face
+// Handling the Textures
 
-    1, 7, 6,   1, 6, 2, // Right face
+// From www.learningwebgl.com
 
-    0, 4, 3,   3, 5, 4  // Left face
+function handleLoadedTexture(texture) {
 
-];
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, texture.image);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.bindTexture(gl.TEXTURE_2D, null);
+}
+
+
+var street_texture;
+var webGLTexture_2;
+var color_texture;
+
+function initTexture() {
+
+    street_texture = gl.createTexture();
+    street_texture.image = new Image();
+    street_texture.image.onload = function () {
+        handleLoadedTexture(street_texture)
+    };
+
+    street_texture.image.src = "texture/street.gif";
+
+    webGLTexture_2 = gl.createTexture();
+    webGLTexture_2.image = new Image();
+    webGLTexture_2.image.onload = function () {
+        handleLoadedTexture(webGLTexture_2)
+    };
+
+    webGLTexture_2.image.src = "Az.gif";
+
+    color_texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, color_texture);
+    var whitePixel = new Uint8Array([255, 255, 255, 255]);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0,
+        gl.RGBA, gl.UNSIGNED_BYTE, whitePixel);
+
+
+}
+
+//----------------------------------------------------------------------------
+
+// Handling the Buffers
 
 function initBuffers() {
 
-    VertexPositionBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, VertexPositionBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positional), gl.STATIC_DRAW);
-    VertexPositionBuffer.itemSize = 3;
-    VertexPositionBuffer.numItems = positional.length / 3;
+    // Coordinates
 
-    gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute,
-        VertexPositionBuffer.itemSize,
-        gl.FLOAT, false, 0, 0);
+    cubeVertexPositionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexPositionBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+    cubeVertexPositionBuffer.itemSize = 3;
+    cubeVertexPositionBuffer.numItems = vertices.length / 3;
 
-    VertexColorBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, VertexColorBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
-    VertexColorBuffer.itemSize = 3;
-    VertexColorBuffer.numItems = colors.length / 3;
+    // Textures
 
-    gl.vertexAttribPointer(shaderProgram.vertexColorAttribute,
-        VertexColorBuffer.itemSize,
-        gl.FLOAT, false, 0, 0);
+    cubeVertexTextureCoordBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexTextureCoordBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoords), gl.STATIC_DRAW);
+    cubeVertexTextureCoordBuffer.itemSize = 2;
+    cubeVertexTextureCoordBuffer.numItems = 24;
 
-    VertexIndexBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, VertexIndexBuffer);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(plane_vertices_index), gl.STATIC_DRAW);
-    VertexIndexBuffer.itemSize = 1;
-    VertexIndexBuffer.numItems = 6;
+    // Vertex indices
 
-    PlayerVertexIndexBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, PlayerVertexIndexBuffer);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(player_vertices_index), gl.STATIC_DRAW);
-    PlayerVertexIndexBuffer.itemSize = 1;
-    PlayerVertexIndexBuffer.numItems = 6;
-
+    cubeVertexIndexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, cubeVertexIndexBuffer);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(cubeVertexIndices), gl.STATIC_DRAW);
+    cubeVertexIndexBuffer.itemSize = 1;
+    cubeVertexIndexBuffer.numItems = 36;
 }
 
+//----------------------------------------------------------------------------
 
-function initWebGL(canvas) {
+//  Drawing the model
 
-    try {
-        gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
-
-        gl.clearColor(1.0, 1.0, 1.0, 1.0);
-
-        gl.enable( gl.CULL_FACE );
-
-        gl.cullFace( gl.BACK );
-
-        // Buttons
-    } catch (e) {
-    }
-
-    if (!gl) {
-        alert("WebGL not initialise :(");
-    }
-
-}
-
-function changeColors(c1,c2,c3) {
-
-    for(var i=0; i<colors.length;i+=3){
-        colors[i] = c1;
-        colors[i+1] = c2;
-        colors[i+2] = c3;
-    }
-
-}
-
-function drawScene() {
-
-    var mvMatrix = mat4();
-
-    mvMatrix = prepare_plane(mvMatrix);
-
-    //plane
-    changeColors(0.00,0.00,1.00);
-    drawModel(1,1,1, tx, 0,  -3,
-        mvMatrix);
-
-    //player
-    changeColors(0.00,1.00,1.00);
-    drawModel(0.3,0.3,0.3, 0, 0,  -3,
-        mvMatrix,);
-
-}
-
-function drawModel(sx,sy,sz,
+function drawModel(angleXX,
+                   sx, sy, sz,
                    tx, ty, tz,
-                    mvMatrix) {
+                   mvMatrix,
+                   primitiveType, image, bol) {
 
     // Pay attention to transformation order !!
 
-    mvMatrix = mult( mvMatrix, translationMatrix( tx, -1, tz ) );
-    mvMatrix = mult( mvMatrix, rotationXXMatrix( -60 ) );
+    mvMatrix = mult(mvMatrix, translationMatrix(tx, ty, tz));
+
+    mvMatrix = mult(mvMatrix, rotationXXMatrix(angleXX));
+
+    mvMatrix = mult(mvMatrix, scalingMatrix(sx, sy, sz));
 
     // Passing the Model View Matrix to apply the current transformation
 
@@ -166,93 +265,291 @@ function drawModel(sx,sy,sz,
 
     // Passing the buffers
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, VertexPositionBuffer);
+    gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexPositionBuffer);
 
-    gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, VertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+    gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, cubeVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, VertexColorBuffer);
+    // NEW --- Textures
 
-    gl.vertexAttribPointer(shaderProgram.vertexColorAttribute, VertexColorBuffer.itemSize, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexTextureCoordBuffer);
+    gl.vertexAttribPointer(shaderProgram.textureCoordAttribute, cubeVertexTextureCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, VertexIndexBuffer);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, image);
+
+    gl.uniform1i(shaderProgram.samplerUniform, 0);
+
+    // NEW --- Blending
+
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+
+    var alpha = 1;
+
+    var color = new Float32Array([1.0, 1.0, 1.0, 1.0]);
+    if (bol) {
+        alpha = 1;
+        color = new Float32Array([0.0, 0.0, 1.0, 1.0]);
+    }
+    gl.uniform1f(shaderProgram.alphaUniform, alpha);
+    gl.uniform4fv(shaderProgram.vertexColorUniform, color);
+
+    // The vertex indices
+
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, cubeVertexIndexBuffer);
 
     // Drawing the triangles --- NEW --- DRAWING ELEMENTS
 
-    gl.drawElements(gl.TRIANGLES, VertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+    gl.drawElements(gl.TRIANGLES, cubeVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 }
 
-function prepare_plane(mvMatrix) {
+//----------------------------------------------------------------------------
 
-    var pMatrix = perspective( 45, 1, 0.05, 15 );
+//  Drawing the 3D scene
+
+function drawScene() {
+
+    gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+
+    var pMatrix;
+
+    var mvMatrix = mat4();
+
+    // Clearing with the background color
+
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    // A standard view volume.
+
+    // Viewer is at (0,0,0)
+
+    // Ensure that the model is "inside" the view volume
+
+    pMatrix = perspective(45, 1, 0.05, 10);
+
+    tz = -2.25;
+
+    // Passing the Projection Matrix to apply the current projection
 
     var pUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
 
     gl.uniformMatrix4fv(pUniform, false, new Float32Array(flatten(pMatrix)));
 
-    return mvMatrix;
+    // NEW --- Instantianting the same model more than once !!
+
+    // And with diferent transformation parameters !!
+
+    // Call the drawModel function !!
+
+    // Instance 1 --- RIGHT TOP
+
+
+	if (!is_moving) {
+		velocity += velocity_dir*0.005;
+	}
+
+    drawModel(-60,
+        0.60, 0.90, 0.60,
+        0, -0.60, tz,
+        mvMatrix,
+        primitiveType, street_texture, false);
+
+    // Instance 2 --- LEFT TOP
+
+	console.log(velocity);
+
+    drawModel(0,   // CW rotations
+        0.10, 0.10, 0.10,
+        tm + velocity, -0.80, tz,
+        mvMatrix,
+        primitiveType, color_texture, true);
+    /*
+    // Instance 3 --- LEFT BOTTOM
+
+    drawModel( angleXX, angleYY, -angleZZ,
+               sx, sy, sz,
+               tx + 0.5, ty - 0.5, tz,
+               mvMatrix,
+               primitiveType );
+
+    // Instance 4 --- RIGHT BOTTOM
+
+    drawModel( angleXX, -angleYY, angleZZ,  // CW rotations
+               sx, sy, sz,
+               tx - 0.5, ty - 0.5, tz,
+               mvMatrix,
+               primitiveType );*/
+
+    countFrames();
+
 }
 
+//----------------------------------------------------------------------------
+
+// Handling keyboard events
+
+// Adapted from www.learningwebgl.com
+
+var currentlyPressedKeys = {};
+
+function handleKeys() {
+
+    if (currentlyPressedKeys[37]) {
+
+        // Left cursor key
+
+        if (!is_moving) {
+            is_moving = true
+        }
+
+        velocity_dir = -1;
+
+        tm -= 0.01;
+    }
+    if (currentlyPressedKeys[39]) {
+
+        // Right cursor key
+
+        if (!is_moving) {
+            is_moving = true
+        }
+
+        tm += 0.01;
+        velocity_dir = +1;
+    }
+}
+
+//----------------------------------------------------------------------------
+
+// Timer
+
 function tick() {
-    requestAnimationFrame(tick);
+
+    requestAnimFrame(tick);
+
+    // NEW --- Processing keyboard events
 
     handleKeys();
 
-    render();
+    drawScene();
 }
 
-function render() {
 
-    gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    drawScene()
-}
-
-var currentlyPressedKeys = {};
-function handleKeys() {
-
-    if(currentlyPressedKeys[38]){
-        console.log("ON THE MOVE");
-        tx -= 0.1;
-    }
-    if(currentlyPressedKeys[40]){
-        tx += 0.1;
-    }
-
-}
+//----------------------------------------------------------------------------
 
 function setEventListeners(canvas) {
 
+    // NEW ---Handling the mouse
+
+    // From learningwebgl.com
+
+    // NEW ---Handling the keyboard
+
+    // From learningwebgl.com
+
     function handleKeyDown(event) {
+
         currentlyPressedKeys[event.keyCode] = true;
     }
 
     function handleKeyUp(event) {
+
         currentlyPressedKeys[event.keyCode] = false;
+        is_moving = false;
     }
 
-    canvas.onkeyup = handleKeyUp;
+    document.onkeydown = handleKeyDown;
 
-    canvas.onkeydown = handleKeyDown;
-
-    window.addEventListener('resize', runWebGL, false);
-
+    document.onkeyup = handleKeyUp;
 }
+
+
+//----------------------------------------------------------------------------
+//
+// WebGL Initialization
+//
+
+function initWebGL(canvas) {
+    try {
+
+        // Create the WebGL context
+
+        // Some browsers still need "experimental-webgl"
+
+        gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+
+        // DEFAULT: The viewport occupies the whole canvas
+
+        // DEFAULT: The viewport background color is WHITE
+
+        // NEW - Drawing the triangles defining the model
+
+        primitiveType = gl.TRIANGLES;
+
+        // DEFAULT: Blending is DISABLED
+
+        // Enable it !
+
+        gl.enable(gl.CULL_FACE);
+
+    } catch (e) {
+    }
+    if (!gl) {
+        alert("Could not initialise WebGL, sorry! :-(");
+    }
+}
+
+//----------------------------------------------------------------------------
 
 function runWebGL() {
 
-    canvas = document.getElementById("game_window");
+    var canvas = document.getElementById("game_window");
 
     canvas.width = window.innerWidth - 15;
-    canvas.height = window.innerHeight - 22;
+    canvas.height = window.innerHeight - 70;
+
+    window.addEventListener('resize', runWebGL, false);
 
     initWebGL(canvas);
 
-    shaderProgram = initShaders( gl );
+    shaderProgram = initShaders(gl);
 
     setEventListeners(canvas);
 
     initBuffers();
 
-    tick()
+    initTexture();
 
+    tick();		// A timer controls the rendering / animation
 }
+
+var elapsedTime = 0;
+
+var frameCount = 0;
+
+var lastfpsTime = new Date().getTime();
+
+
+function countFrames() {
+
+    var now = new Date().getTime();
+
+    frameCount++;
+
+    elapsedTime += (now - lastfpsTime);
+
+    lastfpsTime = now;
+
+    if (elapsedTime >= 1000) {
+
+        fps = frameCount;
+
+        frameCount = 0;
+
+        elapsedTime -= 1000;
+
+        document.getElementById('fps').innerHTML = 'fps:' + fps;
+    }
+}
+
+
+
