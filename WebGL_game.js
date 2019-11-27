@@ -1,16 +1,3 @@
-//////////////////////////////////////////////////////////////////////////////
-//
-//  WebGL_game.js
-//
-//  Applying a texture and blending
-//
-//  Adapted from learningwebgl.com
-//
-//  J. Madeira - November 2015
-//
-//////////////////////////////////////////////////////////////////////////////
-
-
 //----------------------------------------------------------------------------
 //
 // Global Variables
@@ -20,20 +7,31 @@ var gl = null; // WebGL context
 
 var shaderProgram = null;
 
+var count = 0;
+
 // NEW --- Buffers
 
 var cubeVertexPositionBuffer = null;
 
-var cubeVertexIndexBuffer = null;
+var cubeVertexNormalPositionBuffer = null;
 
-var cubeVertexTextureCoordBuffer;
+var cubeVertexTextureCoordBuffer = null;
 
 // The global transformation parameters
 
+var globalTz = -2.25;
+
+// It has to be updated according to the projection type
+
+var pos_Viewer = [ 0.0, 0.0, 0.0, 1.0 ];
+
+// Movement
 // velocity
 
 var velocity = 0.0;
-var velocity_dir = 1;
+var velocity_dir = 0;
+
+var on_wall =  false;
 
 // on the move?
 
@@ -41,67 +39,16 @@ var is_moving = true;
 
 // The translation vector
 
-var tz = 0.0;
-
 var tm = 0.0;
 
-// To allow choosing the way of drawing the model triangles
-
-var primitiveType = null;
-
-// From learningwebgl.com
-
-// NEW --- Storing the vertices defining the cube faces
-
-vertices = [
-    // Front face
-    -1.0, -1.0, 1.0,
-    1.0, -1.0, 1.0,
-    1.0, 1.0, 1.0,
-    -1.0, 1.0, 1.0,
-
-    // Back face
-    -1.0, -1.0, -1.0,
-    -1.0, 1.0, -1.0,
-    1.0, 1.0, -1.0,
-    1.0, -1.0, -1.0,
-
-    // Top face
-    -1.0, 1.0, -1.0,
-    -1.0, 1.0, 1.0,
-    1.0, 1.0, 1.0,
-    1.0, 1.0, -1.0,
-
-    // Bottom face
-    -1.0, -1.0, -1.0,
-    1.0, -1.0, -1.0,
-    1.0, -1.0, 1.0,
-    -1.0, -1.0, 1.0,
-
-    // Right face
-    1.0, -1.0, -1.0,
-    1.0, 1.0, -1.0,
-    1.0, 1.0, 1.0,
-    1.0, -1.0, 1.0,
-
-    // Left face
-    -1.0, -1.0, -1.0,
-    -1.0, -1.0, 1.0,
-    -1.0, 1.0, 1.0,
-    -1.0, 1.0, -1.0
-];
-
-// Texture coordinates for the quadrangular faces
-
-// Notice how they are assigne to the corresponding vertices
-
+/*
 var textureCoords = [
 
     // Front face
     0.0, 0.0,
-    5.0, 0.0,
-    5.0, 5.0,
-    0.0, 5.0,
+    1.0, 0.0,
+    1.0, 1.0,
+    0.0, 1.0,
 
     // Back face
     1.0, 0.0,
@@ -132,26 +79,9 @@ var textureCoords = [
     1.0, 0.0,
     1.0, 1.0,
     0.0, 1.0,
-];
+];*/
 
 // Vertex indices defining the triangles
-
-var cubeVertexIndices = [
-
-    0, 1, 2, 0, 2, 3,    // Front face
-
-    4, 5, 6, 4, 6, 7,    // Back face
-
-    8, 9, 10, 8, 10, 11,  // Top face
-
-    12, 13, 14, 12, 14, 15, // Bottom face
-
-    16, 17, 18, 16, 18, 19, // Right face
-
-    20, 21, 22, 20, 22, 23  // Left face
-];
-
-
 //----------------------------------------------------------------------------
 //
 // The WebGL code
@@ -178,7 +108,7 @@ function handleLoadedTexture(texture) {
 
 
 var street_texture;
-var webGLTexture_2;
+var ice_texture;
 var color_texture;
 
 function initTexture() {
@@ -191,13 +121,13 @@ function initTexture() {
 
     street_texture.image.src = "texture/street.gif";
 
-    webGLTexture_2 = gl.createTexture();
-    webGLTexture_2.image = new Image();
-    webGLTexture_2.image.onload = function () {
-        handleLoadedTexture(webGLTexture_2)
+    ice_texture = gl.createTexture();
+    ice_texture.image = new Image();
+    ice_texture.image.onload = function () {
+        handleLoadedTexture(ice_texture)
     };
 
-    webGLTexture_2.image.src = "Az.gif";
+    ice_texture.image.src = "texture/ice.gif";
 
     color_texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, color_texture);
@@ -205,57 +135,62 @@ function initTexture() {
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0,
         gl.RGBA, gl.UNSIGNED_BYTE, whitePixel);
 
-
 }
 
 //----------------------------------------------------------------------------
 
 // Handling the Buffers
 
-function initBuffers() {
+function initBuffers(model) {
 
     // Coordinates
 
     cubeVertexPositionBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexPositionBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(model.vertices), gl.STATIC_DRAW);
     cubeVertexPositionBuffer.itemSize = 3;
-    cubeVertexPositionBuffer.numItems = vertices.length / 3;
+    cubeVertexPositionBuffer.numItems = model.vertices.length / 3;
+
+    gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute,
+        cubeVertexPositionBuffer.itemSize,
+        gl.FLOAT, false, 0, 0);
+
+
+    cubeVertexNormalPositionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexNormalPositionBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(model.normals), gl.STATIC_DRAW);
+    cubeVertexNormalPositionBuffer.itemSize = 3;
+    cubeVertexNormalPositionBuffer.numItems = model.normals.length / 3;
+
+    gl.vertexAttribPointer(shaderProgram.vertexNormalAttribute,
+        cubeVertexNormalPositionBuffer.itemSize,
+        gl.FLOAT, false, 0, 0);
 
     // Textures
-
     cubeVertexTextureCoordBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexTextureCoordBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoords), gl.STATIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(model.textureCoords), gl.STATIC_DRAW);
     cubeVertexTextureCoordBuffer.itemSize = 2;
-    cubeVertexTextureCoordBuffer.numItems = 24;
+    cubeVertexNormalPositionBuffer.numItems = 24;
 
-    // Vertex indices
-
-    cubeVertexIndexBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, cubeVertexIndexBuffer);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(cubeVertexIndices), gl.STATIC_DRAW);
-    cubeVertexIndexBuffer.itemSize = 1;
-    cubeVertexIndexBuffer.numItems = 36;
+    gl.vertexAttribPointer(shaderProgram.textureCoordAttribute, cubeVertexTextureCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
 }
 
 //----------------------------------------------------------------------------
 
 //  Drawing the model
 
-function drawModel(angleXX,
-                   sx, sy, sz,
-                   tx, ty, tz,
+function drawModel(model,
                    mvMatrix,
-                   primitiveType, image, bol) {
+                   image) {
 
     // Pay attention to transformation order !!
 
-    mvMatrix = mult(mvMatrix, translationMatrix(tx, ty, tz));
+    mvMatrix = mult(mvMatrix, translationMatrix(model.tx, model.ty, model.tz));
 
-    mvMatrix = mult(mvMatrix, rotationXXMatrix(angleXX));
+    mvMatrix = mult(mvMatrix, rotationXXMatrix(model.rotAngleXX));
 
-    mvMatrix = mult(mvMatrix, scalingMatrix(sx, sy, sz));
+    mvMatrix = mult(mvMatrix, scalingMatrix(model.sx, model.sy, model.sz));
 
     // Passing the Model View Matrix to apply the current transformation
 
@@ -263,16 +198,41 @@ function drawModel(angleXX,
 
     gl.uniformMatrix4fv(mvUniform, false, new Float32Array(flatten(mvMatrix)));
 
-    // Passing the buffers
+    initBuffers(model);
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexPositionBuffer);
+    // Material properties
 
-    gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, cubeVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+    gl.uniform3fv( gl.getUniformLocation(shaderProgram, "k_ambient"),
+        flatten(model.kAmbi) );
+
+    gl.uniform3fv( gl.getUniformLocation(shaderProgram, "k_diffuse"),
+        flatten(model.kDiff) );
+
+    gl.uniform3fv( gl.getUniformLocation(shaderProgram, "k_specular"),
+        flatten(model.kSpec) );
+
+    gl.uniform1f( gl.getUniformLocation(shaderProgram, "shininess"),
+        model.nPhong );
+
+    // Light Sources
+
+    var numLights = lightSources.length;
+
+    gl.uniform1i( gl.getUniformLocation(shaderProgram, "numLights"),
+        numLights );
+
+    //Light Sources
+
+    gl.uniform1i( gl.getUniformLocation(shaderProgram, "allLights[" + String(0) + "].isOn"),
+        lightSources[0].isOn );
+
+    gl.uniform4fv( gl.getUniformLocation(shaderProgram, "allLights[" + String(0) + "].position"),
+        flatten(lightSources[0].getPosition()) );
+
+    gl.uniform3fv( gl.getUniformLocation(shaderProgram, "allLights[" + String(0) + "].intensities"),
+        flatten(lightSources[0].getIntensity()) );
 
     // NEW --- Textures
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexTextureCoordBuffer);
-    gl.vertexAttribPointer(shaderProgram.textureCoordAttribute, cubeVertexTextureCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, image);
@@ -280,26 +240,12 @@ function drawModel(angleXX,
     gl.uniform1i(shaderProgram.samplerUniform, 0);
 
     // NEW --- Blending
-
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
 
-    var alpha = 1;
+    gl.uniform1f(shaderProgram.alphaUniform, model.TextureAlpha);
+    gl.uniform4fv(shaderProgram.vertexColorUniform, model.TextureColor);
 
-    var color = new Float32Array([1.0, 1.0, 1.0, 1.0]);
-    if (bol) {
-        alpha = 1;
-        color = new Float32Array([0.0, 0.0, 1.0, 1.0]);
-    }
-    gl.uniform1f(shaderProgram.alphaUniform, alpha);
-    gl.uniform4fv(shaderProgram.vertexColorUniform, color);
-
-    // The vertex indices
-
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, cubeVertexIndexBuffer);
-
-    // Drawing the triangles --- NEW --- DRAWING ELEMENTS
-
-    gl.drawElements(gl.TRIANGLES, cubeVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+    gl.drawArrays(gl.TRIANGLES, 0, cubeVertexPositionBuffer.numItems);
 }
 
 //----------------------------------------------------------------------------
@@ -312,11 +258,11 @@ function drawScene() {
 
     var pMatrix;
 
-    var mvMatrix = mat4();
+    var mvMatrix;
 
     // Clearing with the background color
 
-    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     // A standard view volume.
 
@@ -326,7 +272,9 @@ function drawScene() {
 
     pMatrix = perspective(45, 1, 0.05, 10);
 
-    tz = -2.25;
+    pos_Viewer[0] = pos_Viewer[1] = pos_Viewer[2] = 0.0;
+
+    pos_Viewer[3] = 1.0;
 
     // Passing the Projection Matrix to apply the current projection
 
@@ -334,53 +282,106 @@ function drawScene() {
 
     gl.uniformMatrix4fv(pUniform, false, new Float32Array(flatten(pMatrix)));
 
-    // NEW --- Instantianting the same model more than once !!
+    gl.uniform4fv(gl.getUniformLocation(shaderProgram, "viewerPosition"),flatten(pos_Viewer));
 
-    // And with diferent transformation parameters !!
+    mvMatrix = translationMatrix(0,0,globalTz);
 
-    // Call the drawModel function !!
+    var t_total = tm + velocity;
+    on_wall = our_abs(t_total) >= 0.7;
 
-    // Instance 1 --- RIGHT TOP
-
-
-	if (!is_moving) {
+    if (!is_moving && !on_wall) {
 		velocity += velocity_dir*0.005;
 	}
 
-    drawModel(-60,
-        0.60, 0.90, 0.60,
-        0, -0.60, tz,
+    for(var i = 0; i < lightSources.length; i++ )
+    {
+        // Animating the light source, if defined
+
+        var lightSourceMatrix = mat4();
+
+        if( !lightSources[i].isOff() ) {
+
+            // COMPLETE THE CODE FOR THE OTHER ROTATION AXES
+
+            if( lightSources[i].isRotYYOn() )
+            {
+                lightSourceMatrix = mult(
+                    lightSourceMatrix,
+                    rotationYYMatrix( lightSources[i].getRotAngleYY() ) );
+            }
+        }
+
+        // NEW Passing the Light Souree Matrix to apply
+
+        var lsmUniform = gl.getUniformLocation(shaderProgram, "allLights["+ String(i) + "].lightSourceMatrix");
+
+        gl.uniformMatrix4fv(lsmUniform, false, new Float32Array(flatten(lightSourceMatrix)));
+    }
+
+    var plane = Plane();
+    plane.rotAngleXX = -60; plane.sx = 1; plane.sy = 2.5; plane.sz = 0.60;
+    plane.tx = 0; plane.ty = -0.5; plane.tz = globalTz;
+    drawModel(plane,
         mvMatrix,
-        primitiveType, street_texture, false);
+        ice_texture);
 
-    // Instance 2 --- LEFT TOP
-
-	console.log(velocity);
-
-    drawModel(0,   // CW rotations
-        0.10, 0.10, 0.10,
-        tm + velocity, -0.80, tz,
+    var player = simpleCubeModel(2);
+    player.rotAngleXX = 0; player.sx = 0.10; player.sy = 0.10; player.sz = 0.20;
+    player.tx = tm+velocity; player.ty = -0.70; player.tz = 0.0;
+    player.TextureColor = [0.0,0.0,1.0,1.0];
+    drawModel(player,
         mvMatrix,
-        primitiveType, color_texture, true);
-    /*
-    // Instance 3 --- LEFT BOTTOM
+        color_texture);
 
-    drawModel( angleXX, angleYY, -angleZZ,
-               sx, sy, sz,
-               tx + 0.5, ty - 0.5, tz,
-               mvMatrix,
-               primitiveType );
 
-    // Instance 4 --- RIGHT BOTTOM
+    for(var i = 0; i < 4; i++ )
+    {
+        if(count >= 500){
+            generate_model();
+            count = 0;
+        }
+        count++;
+    }
 
-    drawModel( angleXX, -angleYY, angleZZ,  // CW rotations
-               sx, sy, sz,
-               tx - 0.5, ty - 0.5, tz,
-               mvMatrix,
-               primitiveType );*/
+    for(var j = 0; j < sceneModels.length; j++){
+
+        sceneModels[j].TextureColor = [0.0,1.0,0.0,1.0];
+        drawModel( sceneModels[j],
+            mvMatrix,
+            color_texture );
+        sceneModels[j].tz += 0.04;
+        sceneModels[j].ty -= 0.02;
+    }
 
     countFrames();
 
+}
+
+
+var lastTime2 = 0;
+
+function animate() {
+
+    var timeNow = new Date().getTime();
+
+    if( lastTime2 != 0 ) {
+
+        var elapsed = timeNow - lastTime2;
+
+        // Rotating the light sources
+
+        for(var i = 0; i < lightSources.length; i++ )
+        {
+            if( lightSources[i].isRotYYOn() ) {
+
+                var angle = lightSources[i].getRotAngleYY() + lightSources[i].getRotationSpeed() * (90 * elapsed) / 1000.0;
+
+                lightSources[i].setRotAngleYY( angle );
+            }
+        }
+    }
+
+    lastTime = timeNow;
 }
 
 //----------------------------------------------------------------------------
@@ -401,9 +402,11 @@ function handleKeys() {
             is_moving = true
         }
 
+        if(!on_wall || velocity_dir != -1)
+            tm -= 0.01;
+
         velocity_dir = -1;
 
-        tm -= 0.01;
     }
     if (currentlyPressedKeys[39]) {
 
@@ -413,8 +416,10 @@ function handleKeys() {
             is_moving = true
         }
 
-        tm += 0.01;
-        velocity_dir = +1;
+        if(!on_wall || velocity_dir != 1)
+            tm += 0.01;
+
+        velocity_dir = 1;
     }
 }
 
@@ -426,25 +431,17 @@ function tick() {
 
     requestAnimFrame(tick);
 
-    // NEW --- Processing keyboard events
+    drawScene();
+
+    animate();
 
     handleKeys();
-
-    drawScene();
 }
 
 
 //----------------------------------------------------------------------------
 
 function setEventListeners(canvas) {
-
-    // NEW ---Handling the mouse
-
-    // From learningwebgl.com
-
-    // NEW ---Handling the keyboard
-
-    // From learningwebgl.com
 
     function handleKeyDown(event) {
 
@@ -454,7 +451,9 @@ function setEventListeners(canvas) {
     function handleKeyUp(event) {
 
         currentlyPressedKeys[event.keyCode] = false;
-        is_moving = false;
+        if (is_moving) {
+            is_moving = false
+        }
     }
 
     document.onkeydown = handleKeyDown;
@@ -477,19 +476,13 @@ function initWebGL(canvas) {
 
         gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
 
-        // DEFAULT: The viewport occupies the whole canvas
-
-        // DEFAULT: The viewport background color is WHITE
-
-        // NEW - Drawing the triangles defining the model
-
-        primitiveType = gl.TRIANGLES;
-
-        // DEFAULT: Blending is DISABLED
-
-        // Enable it !
+        gl.clearColor(0.76171875,0.56640625,0.0313, 1);
 
         gl.enable(gl.CULL_FACE);
+
+        gl.cullFace(gl.BACK);
+
+        gl.enable(gl.DEPTH_TEST)
 
     } catch (e) {
     }
@@ -514,8 +507,6 @@ function runWebGL() {
     shaderProgram = initShaders(gl);
 
     setEventListeners(canvas);
-
-    initBuffers();
 
     initTexture();
 

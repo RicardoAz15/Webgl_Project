@@ -152,7 +152,7 @@ LightSource.prototype.getRotationSpeed = function() {
 LightSource.prototype.setRotationSpeed = function( s ) {
 	
 	this.rotationSpeed = s;
-}
+};
 
 // COMPLETE THE MISSING METHODS !!
 
@@ -170,9 +170,9 @@ lightSources.push( new LightSource() );
 
 lightSources[0].setPosition( -1.0, 1.0, 1.0, 0.0 );
 
-lightSources[0].setIntensity( 1.0, 0.0, 0.0 );
+lightSources[0].setIntensity( 1.0, 1.0, 1.0 );
 
-lightSources[0].setAmbIntensity( 0.2, 0.0, 0.0 );
+lightSources[0].setAmbIntensity( 1.0, 1.0, 1.0 );
 
 lightSources[0].switchRotYYOn();
 
@@ -180,7 +180,7 @@ lightSources[0].setRotationSpeed( 1.0 );
 
 // Light source 1
 
-lightSources.push( new LightSource() );
+/*lightSources.push( new LightSource() );
 
 lightSources[1].setPosition( 10.0, 10.0, 10.0, 1.0 );
 
@@ -190,5 +190,5 @@ lightSources[1].setAmbIntensity( 0.0, 0.0, 0.2 );
 
 lightSources[1].switchRotYYOn();
 
-lightSources[1].setRotationSpeed( -0.5 );
+lightSources[1].setRotationSpeed( -0.5 );*/
 

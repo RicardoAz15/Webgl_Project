@@ -65,30 +65,33 @@ function initShaders( gl ) {
 
 	gl.useProgram(shaderProgram);
 
-	// Coordinates 
-	
-	shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
+	// Shader input
+
+	// Vertex Coordinates
+
+	shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "vPosition");
 	gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
 
+	// Vertex Normals
+
+	shaderProgram.vertexNormalAttribute = gl.getAttribLocation(shaderProgram, "vNormal");
+	gl.enableVertexAttribArray(shaderProgram.vertexNormalAttribute);
+
 	// NEW --- Texture coordinates
-	
-    shaderProgram.textureCoordAttribute = gl.getAttribLocation(shaderProgram, "aTextureCoord");
-    gl.enableVertexAttribArray(shaderProgram.textureCoordAttribute);
 
-	// NEW --- The matrices
-	 
-    shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
-    shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
-    
-    // NEW --- The sampler
-    
-    shaderProgram.samplerUniform = gl.getUniformLocation(shaderProgram, "uSampler");
+	shaderProgram.textureCoordAttribute = gl.getAttribLocation(shaderProgram, "aTextureCoord");
+	gl.enableVertexAttribArray(shaderProgram.textureCoordAttribute);
 
-    // NEW --- Blending
+	// NEW --- The sampler
 
-    shaderProgram.alphaUniform = gl.getUniformLocation(shaderProgram, "uAlpha");
+	shaderProgram.samplerUniform = gl.getUniformLocation(shaderProgram, "uSampler");
+
+	// NEW --- Blending
+
+	shaderProgram.alphaUniform = gl.getUniformLocation(shaderProgram, "uAlpha");
 
 	shaderProgram.vertexColorUniform = gl.getUniformLocation(shaderProgram,"u_color");
-    
+
 	return shaderProgram;
 }
+
