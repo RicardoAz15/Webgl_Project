@@ -246,22 +246,65 @@ var sceneModels = [];
 
 function generate_model(){
 
-	var available_Models = [new simpleCubeModel(), new sphereModel( 5 )];
+	var available_Models = [new simpleCubeModel()];
 	var available_positions = [0.6, -0.6, 0];
 	
 // Model 0 --- Top Left
-	var model = available_Models[Math.round(random_number(0,1))];
+	var model = available_Models[Math.round(random_number(0,0))];
 
-	model.tx = available_positions[Math.round(random_number(0,2))]; model.ty = 1.5;
-	model.tz = -4;
+	model.tx = random_number(0,0); model.ty = 3.6;
+	model.tz = -7;
 
 	model.rotAngleXX = 30;
 
-	model.sx =  0.2;
-	model.sy = 0.4;
-	model.sz = 0.3;
+	model.sx = random_number(0.1,0.2);
+	model.sy = random_number(0.2,0.4);
+	model.sz = random_number(0.05,0.2);
 
 		sceneModels.push(model);
 
-	return model
+	return model;
 }
+
+
+function detectHitBox(model){
+    var minXX = 100;
+    var maxXX = -100;
+    var minZZ = 100;
+    var maxZZ = -100;
+
+    	for(var i = 0; i < model.vertices.length; i+=3){
+    		var vector = vec4();
+    		vector[0] = model.vertices[i]   + model.tx;
+    		vector[1] = model.vertices[i+1] + model.ty;
+    		vector[2] = model.vertices[i+2] + model.tz;
+
+	    	if(vector[0] > maxXX){
+				maxXX = vector[0];
+			}
+			if(vector[0] < minXX){
+				minXX = vector[0];
+			}
+			if(vector[2] > maxZZ){
+				maxZZ = vector[2];
+			}
+			if(vector[2] < minZZ){
+				minZZ = vector[2];
+			}
+    	}
+    	
+	var boxCenter = vec4();
+	boxCenter[0] = (minXX + maxXX)*1.0 / 2;
+	boxCenter[2] = (minZZ + maxZZ)*1.0 / 2;
+
+	var widthXX = maxXX - minXX;
+	var widthZZ = maxZZ - minZZ;
+
+	var hit_position = [boxCenter[0], boxCenter[2], widthXX, widthZZ];
+	
+	return hit_position;
+}
+    
+
+
+

@@ -9,6 +9,7 @@ var shaderProgram = null;
 
 var count = 0;
 
+
 // NEW --- Buffers
 
 var cubeVertexPositionBuffer = null;
@@ -319,24 +320,25 @@ function drawScene() {
     }
 
     var plane = Plane();
-    plane.rotAngleXX = -60; plane.sx = 1; plane.sy = 2.5; plane.sz = 0.60;
-    plane.tx = 0; plane.ty = -0.5; plane.tz = globalTz;
+    plane.rotAngleXX = -60; plane.sx = 1; plane.sy = 9; plane.sz = 0.60;
+    plane.tx = 0; plane.ty = 0; plane.tz = globalTz;
     drawModel(plane,
         mvMatrix,
         ice_texture);
 
-    var player = simpleCubeModel(2);
-    player.rotAngleXX = 0; player.sx = 0.10; player.sy = 0.10; player.sz = 0.20;
-    player.tx = tm+velocity; player.ty = -0.70; player.tz = 0.0;
+    var player = sphereModel(4);
+    player.rotAngleXX = 0; player.sx = 0.05; player.sy = 0.10; player.sz = 0.1;
+    player.tx = tm+velocity; player.ty = -0.30; player.tz = 0.6;
     player.TextureColor = [0.0,0.0,1.0,1.0];
     drawModel(player,
         mvMatrix,
         color_texture);
 
 
-    for(var i = 0; i < 4; i++ )
+
+    for(var i = 0; i < 1; i++ )
     {
-        if(count >= 500){
+        if(count >= 250){
             generate_model();
             count = 0;
         }
@@ -351,8 +353,43 @@ function drawScene() {
             color_texture );
         sceneModels[j].tz += 0.04;
         sceneModels[j].ty -= 0.02;
+
+        if(sceneModels[j].tz >= 2.5){
+            sceneModels.splice(j, 1);
+        }
+        
+    
     }
 
+    player_hit = detectHitBox(player);
+
+    var player_left = player_hit[0] - (player_hit[2]/2);
+    var player_right = player_hit[0] + (player_hit[2]/2);
+    var player_front = player_hit[1] - (player_hit[3]/2);
+    var player_rear = player_hit[1] + (player_hit[3]/2);
+
+    //console.log(player_right)
+    //console.log(player_left)
+    console.log(player_front)
+    console.log(player_rear)
+
+    for(var k = 0; k<sceneModels.length; k++){
+        var object_hit = detectHitBox(sceneModels[k]);
+        var obj_left  = object_hit[0] - (object_hit[2]/2);
+        var obj_right = object_hit[0] + (object_hit[2]/2);
+        var obj_front = object_hit[1] - (object_hit[3]/2);
+        var obj_rear  = object_hit[1] + (object_hit[3]/2);
+    //console.log(obj_right)
+    //console.log(obj_left)
+    console.log(obj_front)
+    console.log(obj_rear)
+        if( (player_right < obj_left*(-1)) || (obj_right < player_left*(-1))|| (player_rear < obj_front*(-1))|| (obj_rear < player_front)){ 
+             console.log("Resulta")
+        }else{
+            console.log("FODEU")
+        }
+    }
+    
     countFrames();
 
 }
@@ -541,6 +578,3 @@ function countFrames() {
         document.getElementById('fps').innerHTML = 'fps:' + fps;
     }
 }
-
-
-

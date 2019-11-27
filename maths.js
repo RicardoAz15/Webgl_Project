@@ -685,3 +685,7 @@ Random generator
 function random_number(x1, x2) {
     return Math.random() * (x2 - x1) + x1;
 }
+
+function our_abs(x){
+	return Math.abs(x);
+}
