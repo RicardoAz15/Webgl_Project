@@ -252,7 +252,7 @@ attribute vec3 vPosition;
 
 </head>
 
-<body onload="runWebGL();">
+<body onload="runWebGL();" style="cursor: none">
 
 	<div id="stats" style="text-align: center">
 		<p
@@ -261,16 +261,16 @@ attribute vec3 vPosition;
 		<p
 				style="text-align: center" id="points"> Points:
 		</p>
-		<canvas id="game_window" style="border: none; alignment: center; margin-top: 2px "></canvas>
-		<div id="game_over" style=" position: absolute; top: 1%; visibility: hidden; color: red">
-			<span id="game_over_span" style="align-content: center; font-size: 1500%">
+		<canvas id="game_window" style="border: none; alignment: center;"></canvas>
+		<div id="game_over" style=" position: absolute; top: 8%; visibility: hidden; color: red; background-color:  rgba(1,1,1,0.3)">
+			<span id="game_over_span" style="align-content: center; font-size: 1400%;">
 			</span>
 			</br>
 			<span id="help" style="align-content: center; font-size: 800%">
 				PRESS SPACE TO RESTART
 			</span>
 			</br>
-			<span id="help_need" style="align-content: center; font-size: 800%">
+			<span id="help_need" style="align-content: center; font-size: 800%; color: black">
 				CLICK H FOR HELP
 			</span>
 

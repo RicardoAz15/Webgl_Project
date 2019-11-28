@@ -288,8 +288,8 @@ function drawScene() {
     var wall1 = simpleCubeModel(2);
     var wall2 = simpleCubeModel(2);
 
-    wall1.sx =0.1; wall1.sy = 4.5; wall1.sz = 0.1;
-    wall2.sx =0.1; wall2.sy = 4.5; wall2.sz = 0.1;
+    wall1.sx =0.1; wall1.sy = 5.1; wall1.sz = 0.1;
+    wall2.sx =0.1; wall2.sy = 5.1; wall2.sz = 0.1;
 
     wall1.rotAngleXX = -60;
     wall2.rotAngleXX = -60;
@@ -332,8 +332,11 @@ function drawScene() {
             mvMatrix,
             ice_texture );
 
-        sceneModels[j].tz += 0.04;
-        sceneModels[j].ty -= 0.0215;
+        if(!game_over_var){
+            sceneModels[j].tz += 0.04;
+            sceneModels[j].ty -= 0.0215;
+        }
+
 
         if(sceneModels[j].tz >= 2.7){
             sceneModels.splice(j,1);
@@ -351,7 +354,7 @@ function drawScene() {
     for(var k = 0; k<sceneModels.length ; k++) {
         player_left = player_hit[0] - (player_hit[2] / 2) - sceneModels[0].sx + 0.96;
         player_right = (player_hit[0] + (player_hit[2] / 2)) + sceneModels[0].sx - 0.96;
-        player_front = player_hit[1] - (player_hit[3] / 2) - globalTz - sceneModels[0].sz - sceneModels[0].sy;
+        player_front = player_hit[1] - (player_hit[3] / 2) - globalTz - sceneModels[0].sz - 0.2 ;
         player_rear = player_hit[1] + (player_hit[3] / 2) + globalTz + sceneModels[0].sz + sceneModels[0].sy;
 
         var object_hit = detectHitBox(sceneModels[k]);
@@ -360,7 +363,7 @@ function drawScene() {
         var obj_front = object_hit[1] - (object_hit[3] / 2);
         var obj_rear = object_hit[1] + (object_hit[3] / 2);
 
-        if((player_right >= obj_left) && (obj_right >= player_left)){
+        if(help && (player_right >= obj_left) && (obj_right >= player_left)){
             sceneModels[k].TextureColor = [1.0, 0.0, 0.0, 1.0];
         }
         else{
@@ -384,10 +387,11 @@ function drawScene() {
 // Adapted from www.learningwebgl.com
 
 var currentlyPressedKeys = {};
-
+var help = false;
 function handleKeys() {
 
-    if(!game_over_var){
+
+    if (!game_over_var) {
         if (currentlyPressedKeys[37]) {
 
             // Left cursor key
@@ -396,7 +400,7 @@ function handleKeys() {
                 is_moving = true
             }
 
-            if(!on_wall || velocity_dir != -1)
+            if (!on_wall || velocity_dir != -1)
                 tm -= 0.01;
 
             velocity_dir = -1;
@@ -409,18 +413,20 @@ function handleKeys() {
                 is_moving = true
             }
 
-            if(!on_wall || velocity_dir != 1)
+            if (!on_wall || velocity_dir != 1)
                 tm += 0.01;
 
             velocity_dir = 1;
         }
-    }
-    else{
+    } else {
         if (currentlyPressedKeys[32]) {
-            if(game_over_var){
+            if (game_over_var) {
                 restart();
                 runWebGL();
             }
+        }
+        if (currentlyPressedKeys[72]) {
+            help = true;
         }
     }
 }
@@ -500,7 +506,7 @@ function runWebGL() {
     var canvas = document.getElementById("game_window");
 
     canvas.width = window.innerWidth - 15;
-    canvas.height = window.innerHeight - 150;
+    canvas.height = window.innerHeight - 100;
 
     window.addEventListener('resize', runWebGL, false);
 
@@ -549,12 +555,10 @@ var game_over_var = false;
 function game_over() {
     sum = 0;
     game_over_var = true;
-    sceneModels = [];
-    tm = 0;
-
 
     document.getElementById("game_over").style.visibility = "visible";
-    document.getElementById("game_over_span").innerHTML= "GAME OVER \n SCORE: " + point;
+    document.getElementById("game_over_span").innerHTML= "GAME OVER SCORE: " + point;
+
 }
 
 function restart() {
@@ -564,6 +568,7 @@ function restart() {
     tm = 0;
     velocity = 0;
     velocity_dir = 0;
+    sceneModels = [];
 
     document.getElementById("game_over").style.visibility = "hidden";
     document.getElementById("game_window").onload();
