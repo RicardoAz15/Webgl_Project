@@ -259,7 +259,7 @@ function drawScene() {
     mvMatrix = translationMatrix(0,0,globalTz);
 
     var t_total = tm + velocity;
-    on_wall = our_abs(t_total) >= 0.6;
+    on_wall = our_abs(t_total) >= 0.78;
 
     if (!is_moving && !on_wall  && !game_over_var) {
 		velocity += velocity_dir*0.005;
@@ -354,8 +354,8 @@ function drawScene() {
     for(var k = 0; k<sceneModels.length ; k++) {
         player_left = player_hit[0] - (player_hit[2] / 2) - sceneModels[0].sx + 0.96;
         player_right = (player_hit[0] + (player_hit[2] / 2)) + sceneModels[0].sx - 0.96;
-        player_front = player_hit[1] - (player_hit[3] / 2) - globalTz - sceneModels[0].sz - 0.2 ;
-        player_rear = player_hit[1] + (player_hit[3] / 2) + globalTz + sceneModels[0].sz + sceneModels[0].sy;
+        player_front = player_hit[1] - (player_hit[3] / 2) - globalTz - sceneModels[0].sz - 0.2;
+        player_rear = player_hit[1] + (player_hit[3] / 2) + globalTz + sceneModels[0].sz + 0.2;
 
         var object_hit = detectHitBox(sceneModels[k]);
         var obj_left = object_hit[0] - (object_hit[2] / 2) + 1;
