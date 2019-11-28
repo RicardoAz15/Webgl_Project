@@ -288,8 +288,8 @@ function drawScene() {
     var wall1 = simpleCubeModel(2);
     var wall2 = simpleCubeModel(2);
 
-    wall1.sx =0.1; wall1.sy = 4; wall1.sz = 0.1;
-    wall2.sx =0.1; wall2.sy = 4; wall2.sz = 0.1;
+    wall1.sx =0.1; wall1.sy = 4.5; wall1.sz = 0.1;
+    wall2.sx =0.1; wall2.sy = 4.5; wall2.sz = 0.1;
 
     wall1.rotAngleXX = -60;
     wall2.rotAngleXX = -60;
@@ -310,14 +310,14 @@ function drawScene() {
     player.sx = 0.05; player.sy = 0.10; player.sz = 0.1;
     player.rotAngleXX = 30;
     player.tx = tm +velocity;
-    player.ty = -0.30;
-    player.tz = 0.6;
+    player.ty = -0.65;
+    player.tz = 0.2;
     player.TextureColor = [0.0,0.5,1.0,1.0];
     drawModel(player,
         mvMatrix,
         color_texture);
 
-    for(var i = 0; i < sum; i++ )
+    for(i = 0; i < sum; i++ )
     {
         if(count >= 256){
             generate_model();
@@ -333,12 +333,11 @@ function drawScene() {
             ice_texture );
 
         sceneModels[j].tz += 0.04;
-        sceneModels[j].ty -= 0.02;
+        sceneModels[j].ty -= 0.0215;
 
         if(sceneModels[j].tz >= 2.7){
-            point+=50;
             sceneModels.splice(j,1);
-            document.getElementById('points').innerHTML = 'points:' + parseInt(point);
+            point+=50
         }
     }
 
@@ -370,7 +369,8 @@ function drawScene() {
 
         if ((player_right < obj_left) || (obj_right < player_left) || (player_rear < obj_front) || obj_rear < player_front) {
         } else {
-            game_over();
+            if(!game_over_var)
+                game_over();
         }
     }
     
@@ -387,31 +387,41 @@ var currentlyPressedKeys = {};
 
 function handleKeys() {
 
-    if (currentlyPressedKeys[37]) {
+    if(!game_over_var){
+        if (currentlyPressedKeys[37]) {
 
-        // Left cursor key
+            // Left cursor key
 
-        if (!is_moving) {
-            is_moving = true
+            if (!is_moving) {
+                is_moving = true
+            }
+
+            if(!on_wall || velocity_dir != -1)
+                tm -= 0.01;
+
+            velocity_dir = -1;
         }
+        if (currentlyPressedKeys[39]) {
 
-        if(!on_wall || velocity_dir != -1)
-            tm -= 0.01;
+            // Right cursor key
 
-        velocity_dir = -1;
+            if (!is_moving) {
+                is_moving = true
+            }
+
+            if(!on_wall || velocity_dir != 1)
+                tm += 0.01;
+
+            velocity_dir = 1;
+        }
     }
-    if (currentlyPressedKeys[39]) {
-
-        // Right cursor key
-
-        if (!is_moving) {
-            is_moving = true
+    else{
+        if (currentlyPressedKeys[32]) {
+            if(game_over_var){
+                restart();
+                runWebGL();
+            }
         }
-
-        if(!on_wall || velocity_dir != 1)
-            tm += 0.01;
-
-        velocity_dir = 1;
     }
 }
 
@@ -426,25 +436,27 @@ function tick() {
     drawScene();
 
     handleKeys();
+
+    document.getElementById('points').innerHTML = 'Score:' + parseInt(point);
 }
 
 
 //----------------------------------------------------------------------------
 
+function handleKeyDown(event) {
+
+    currentlyPressedKeys[event.keyCode] = true;
+}
+
+function handleKeyUp(event) {
+
+    currentlyPressedKeys[event.keyCode] = false;
+    if (is_moving) {
+        is_moving = false
+    }
+}
+
 function setEventListeners() {
-
-    function handleKeyDown(event) {
-
-        currentlyPressedKeys[event.keyCode] = true;
-    }
-
-    function handleKeyUp(event) {
-
-        currentlyPressedKeys[event.keyCode] = false;
-        if (is_moving) {
-            is_moving = false
-        }
-    }
 
     document.onkeydown = handleKeyDown;
 
@@ -509,7 +521,6 @@ var frameCount = 0;
 
 var lastfpsTime = new Date().getTime();
 
-
 function countFrames() {
 
     var now = new Date().getTime();
@@ -541,9 +552,20 @@ function game_over() {
     sceneModels = [];
     tm = 0;
 
-    document.onkeydown = null;
-    document.onkeyup = null;
 
     document.getElementById("game_over").style.visibility = "visible";
-    document.getElementById("game_over_span").innerHTML= "GAME OVER \n POINTS: " + point;
+    document.getElementById("game_over_span").innerHTML= "GAME OVER \n SCORE: " + point;
+}
+
+function restart() {
+    point = 0;
+    sum = 8;
+    game_over_var = false;
+    tm = 0;
+    velocity = 0;
+    velocity_dir = 0;
+
+    document.getElementById("game_over").style.visibility = "hidden";
+    document.getElementById("game_window").onload();
+
 }
