@@ -216,7 +216,7 @@ attribute vec3 vPosition;
 		
         vec4 textureColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
         
-        gl_FragColor = (vec4(textureColor.rgb * vLightWeighting, textureColor.a * uAlpha) * u_color) * fColor ;
+        gl_FragColor = (vec4(textureColor.rgb * vLightWeighting, textureColor.a * uAlpha) * u_color ) * fColor ;
     }
     
 </script>
@@ -254,11 +254,23 @@ attribute vec3 vPosition;
 
 <body onload="runWebGL();">
 
-	<div style="text-align: center">
-		<p id="fps"> fps: </p>
+	<div id="stats" style="text-align: center">
+		<p
+				style="text-align: center" id="fps"> fps:
+		</p>
+		<p
+				style="text-align: center" id="points"> Points:
+		</p>
 		<canvas id="game_window" style="border: none; alignment: center; margin-top: 2px "></canvas>
+		<div id="game_over" style=" position: absolute; top: 20%; font-size: 1500%; visibility: hidden; color: red">
+			<span id="game_over_span" style="align-content: center;">
+				GAME OVER
+			</span>
+		</div>
 				
 	</div>
+
+<!--	<div style=""-->
 
 </body>
 

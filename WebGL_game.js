@@ -9,7 +9,6 @@ var shaderProgram = null;
 
 var count = 0;
 
-
 // NEW --- Buffers
 
 var cubeVertexPositionBuffer = null;
@@ -41,46 +40,6 @@ var is_moving = true;
 // The translation vector
 
 var tm = 0.0;
-
-/*
-var textureCoords = [
-
-    // Front face
-    0.0, 0.0,
-    1.0, 0.0,
-    1.0, 1.0,
-    0.0, 1.0,
-
-    // Back face
-    1.0, 0.0,
-    1.0, 1.0,
-    0.0, 1.0,
-    0.0, 0.0,
-
-    // Top face
-    0.0, 1.0,
-    0.0, 0.0,
-    1.0, 0.0,
-    1.0, 1.0,
-
-    // Bottom face
-    1.0, 1.0,
-    0.0, 1.0,
-    0.0, 0.0,
-    1.0, 0.0,
-
-    // Right face
-    1.0, 0.0,
-    1.0, 1.0,
-    0.0, 1.0,
-    0.0, 0.0,
-
-    // Left face
-    0.0, 0.0,
-    1.0, 0.0,
-    1.0, 1.0,
-    0.0, 1.0,
-];*/
 
 // Vertex indices defining the triangles
 //----------------------------------------------------------------------------
@@ -264,6 +223,7 @@ function drawModel(model,
 
 var point = 0;
 
+
 function drawScene() {
 
     gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
@@ -301,7 +261,7 @@ function drawScene() {
     var t_total = tm + velocity;
     on_wall = our_abs(t_total) >= 0.6;
 
-    if (!is_moving && !on_wall) {
+    if (!is_moving && !on_wall  && !game_over_var) {
 		velocity += velocity_dir*0.005;
 	}
 
@@ -311,18 +271,6 @@ function drawScene() {
 
         var lightSourceMatrix = mat4();
 
-        if( !lightSources[i].isOff() ) {
-
-            // COMPLETE THE CODE FOR THE OTHER ROTATION AXES
-
-            if( lightSources[i].isRotYYOn() )
-            {
-                lightSourceMatrix = mult(
-                    lightSourceMatrix,
-                    rotationYYMatrix( lightSources[i].getRotAngleYY() ) );
-            }
-        }
-
         // NEW Passing the Light Souree Matrix to apply
 
         var lsmUniform = gl.getUniformLocation(shaderProgram, "allLights["+ String(i) + "].lightSourceMatrix");
@@ -331,7 +279,7 @@ function drawScene() {
     }
 
     var plane = Plane();
-    plane.rotAngleXX = -60; plane.sx = 1; plane.sy = 9; plane.sz = 0.60;
+    plane.rotAngleXX = -60; plane.sx = 1; plane.sy = 8; plane.sz = 0.60;
     plane.tx = 0; plane.ty = 0; plane.tz = globalTz;
     drawModel(plane,
         mvMatrix,
@@ -340,8 +288,8 @@ function drawScene() {
     var wall1 = simpleCubeModel(2);
     var wall2 = simpleCubeModel(2);
 
-    wall1.sx =0.1; wall1.sy = 5; wall1.sz = 0.1;
-    wall2.sx =0.1; wall2.sy = 5; wall2.sz = 0.1;
+    wall1.sx =0.1; wall1.sy = 4; wall1.sz = 0.1;
+    wall2.sx =0.1; wall2.sy = 4; wall2.sz = 0.1;
 
     wall1.rotAngleXX = -60;
     wall2.rotAngleXX = -60;
@@ -364,12 +312,12 @@ function drawScene() {
     player.tx = tm +velocity;
     player.ty = -0.30;
     player.tz = 0.6;
-    player.TextureColor = [0.0,0.0,1.0,1.0];
+    player.TextureColor = [0.0,0.5,1.0,1.0];
     drawModel(player,
         mvMatrix,
         color_texture);
 
-    for(var i = 0; i < 8; i++ )
+    for(var i = 0; i < sum; i++ )
     {
         if(count >= 256){
             generate_model();
@@ -390,7 +338,7 @@ function drawScene() {
         if(sceneModels[j].tz >= 2.7){
             point+=50;
             sceneModels.splice(j,1);
-            console.log(point)
+            document.getElementById('points').innerHTML = 'points:' + parseInt(point);
         }
     }
 
@@ -401,56 +349,32 @@ function drawScene() {
     var player_front = 0;
     var player_rear =  0;
 
-    for(var k = 0; k<sceneModels.length ; k++){
-        player_left = player_hit[0] - (player_hit[2]/2) - sceneModels[0].sx + 0.96 ;
-        player_right = (player_hit[0] + (player_hit[2]/2)) + sceneModels[0].sx -0.96;
-        player_front = player_hit[1] - (player_hit[3]/2) - globalTz - sceneModels[0].sz - sceneModels[0].sy;
-        player_rear = player_hit[1] + (player_hit[3]/2) + globalTz + sceneModels[0].sz + sceneModels[0].sy;
+    for(var k = 0; k<sceneModels.length ; k++) {
+        player_left = player_hit[0] - (player_hit[2] / 2) - sceneModels[0].sx + 0.96;
+        player_right = (player_hit[0] + (player_hit[2] / 2)) + sceneModels[0].sx - 0.96;
+        player_front = player_hit[1] - (player_hit[3] / 2) - globalTz - sceneModels[0].sz - sceneModels[0].sy;
+        player_rear = player_hit[1] + (player_hit[3] / 2) + globalTz + sceneModels[0].sz + sceneModels[0].sy;
 
         var object_hit = detectHitBox(sceneModels[k]);
-        var obj_left  = object_hit[0] - (object_hit[2]/2) + 1;
-        var obj_right = object_hit[0] + (object_hit[2]/2) - 1;
-        var obj_front = object_hit[1] - (object_hit[3]/2);
-        var obj_rear  = object_hit[1] + (object_hit[3]/2);
+        var obj_left = object_hit[0] - (object_hit[2] / 2) + 1;
+        var obj_right = object_hit[0] + (object_hit[2] / 2) - 1;
+        var obj_front = object_hit[1] - (object_hit[3] / 2);
+        var obj_rear = object_hit[1] + (object_hit[3] / 2);
 
-        /*console.log(obj_rear);
-        console.log(player_front);*/
+        if((player_right >= obj_left) && (obj_right >= player_left)){
+            sceneModels[k].TextureColor = [1.0, 0.0, 0.0, 1.0];
+        }
+        else{
+            sceneModels[k].TextureColor = [1.0,1.0,1.0,1.0];
+        }
 
-        if( (player_right < obj_left )  || (obj_right < player_left) || (player_rear < obj_front) ||  obj_rear < player_front){
-        }else{
-            sceneModels[k].TextureColor = [1.0,0.0,0.0,1.0];
-            console.log("FODEU")
+        if ((player_right < obj_left) || (obj_right < player_left) || (player_rear < obj_front) || obj_rear < player_front) {
+        } else {
+            game_over();
         }
     }
     
     countFrames();
-}
-
-
-var lastTime2 = 0;
-
-function animate() {
-
-    var timeNow = new Date().getTime();
-
-    if( lastTime2 != 0 ) {
-
-        var elapsed = timeNow - lastTime2;
-
-        // Rotating the light sources
-
-        for(var i = 0; i < lightSources.length; i++ )
-        {
-            if( lightSources[i].isRotYYOn() ) {
-
-                var angle = lightSources[i].getRotAngleYY() + lightSources[i].getRotationSpeed() * (90 * elapsed) / 1000.0;
-
-                lightSources[i].setRotAngleYY( angle );
-            }
-        }
-    }
-
-    lastTime = timeNow;
 }
 
 //----------------------------------------------------------------------------
@@ -501,15 +425,13 @@ function tick() {
 
     drawScene();
 
-    animate();
-
     handleKeys();
 }
 
 
 //----------------------------------------------------------------------------
 
-function setEventListeners(canvas) {
+function setEventListeners() {
 
     function handleKeyDown(event) {
 
@@ -544,7 +466,7 @@ function initWebGL(canvas) {
 
         gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
 
-        gl.clearColor(0.76171875,0.56640625,0.0313, 1);
+        gl.clearColor(0.0,0.5,1.0,1.0);
 
         gl.enable(gl.CULL_FACE);
 
@@ -566,7 +488,7 @@ function runWebGL() {
     var canvas = document.getElementById("game_window");
 
     canvas.width = window.innerWidth - 15;
-    canvas.height = window.innerHeight - 70;
+    canvas.height = window.innerHeight - 150;
 
     window.addEventListener('resize', runWebGL, false);
 
@@ -574,7 +496,7 @@ function runWebGL() {
 
     shaderProgram = initShaders(gl);
 
-    setEventListeners(canvas);
+    setEventListeners();
 
     initTexture();
 
@@ -608,4 +530,20 @@ function countFrames() {
 
         document.getElementById('fps').innerHTML = 'fps:' + fps;
     }
+}
+
+var sum = 8;
+var game_over_var = false;
+
+function game_over() {
+    sum = 0;
+    game_over_var = true;
+    sceneModels = [];
+    tm = 0;
+
+    document.onkeydown = null;
+    document.onkeyup = null;
+
+    document.getElementById("game_over").style.visibility = "visible";
+    document.getElementById("game_over_span").innerHTML= "GAME OVER \n POINTS: " + point;
 }
