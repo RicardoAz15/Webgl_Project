@@ -33,7 +33,7 @@ function LightSource( ) {
 	
 	this.rotXXOn = false;
 	
-	this.rotYYOn = false;
+	this.rotYYOn = true;
 	
 	this.rotZZOn = false;
 	
@@ -168,7 +168,7 @@ var lightSources = [];
 
 lightSources.push( new LightSource() );
 
-lightSources[0].setPosition( -1.0, 1.0, 1.0, 0.0 );
+lightSources[0].setPosition( -0.5, 0.0, 2.0, 0.0 );
 
 lightSources[0].setIntensity( 1.0, 1.0, 1.0 );
 

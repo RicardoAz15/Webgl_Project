@@ -111,6 +111,7 @@ function handleLoadedTexture(texture) {
 var street_texture;
 var ice_texture;
 var color_texture;
+var wall_texture;
 
 function initTexture() {
 
@@ -120,7 +121,7 @@ function initTexture() {
         handleLoadedTexture(street_texture)
     };
 
-    street_texture.image.src = "texture/street.gif";
+    street_texture.image.src = "texture/street2.gif";
 
     ice_texture = gl.createTexture();
     ice_texture.image = new Image();
@@ -129,6 +130,14 @@ function initTexture() {
     };
 
     ice_texture.image.src = "texture/ice.gif";
+
+    wall_texture = gl.createTexture();
+    wall_texture.image = new Image();
+    wall_texture.image.onload = function () {
+        handleLoadedTexture(wall_texture)
+    };
+
+    wall_texture.image.src = "texture/wall.gif";
 
     color_texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, color_texture);
@@ -189,7 +198,8 @@ function drawModel(model,
 
     mvMatrix = mult(mvMatrix, translationMatrix(model.tx, model.ty, model.tz));
 
-    mvMatrix = mult(mvMatrix, rotationXXMatrix(model.rotAngleXX));
+    mvMatrix = mult(mvMatrix, rotationYYMatrix(model.rotAngleYY));
+     mvMatrix = mult(mvMatrix, rotationXXMatrix(model.rotAngleXX));
 
     mvMatrix = mult(mvMatrix, scalingMatrix(model.sx, model.sy, model.sz));
 
@@ -288,11 +298,11 @@ function drawScene() {
     mvMatrix = translationMatrix(0,0,globalTz);
 
     var t_total = tm + velocity;
-    on_wall = our_abs(t_total) >= 0.7;
+    on_wall = our_abs(t_total) >= 0.6;
 
-    if (!is_moving && !on_wall) {
+    /*if (!is_moving && !on_wall) {
 		velocity += velocity_dir*0.005;
-	}
+	}*/
 
     for(var i = 0; i < lightSources.length; i++ )
     {
@@ -326,19 +336,41 @@ function drawScene() {
         mvMatrix,
         ice_texture);
 
-    var player = sphereModel(4);
-    player.rotAngleXX = 0; player.sx = 0.05; player.sy = 0.10; player.sz = 0.1;
-    player.tx = tm+velocity; player.ty = -0.30; player.tz = 0.6;
+    var wall1 = simpleCubeModel(2);
+    var wall2 = simpleCubeModel(2);
+
+    wall1.sx =0.1; wall1.sy = 5; wall1.sz = 0.1;
+    wall2.sx =0.1; wall2.sy = 5; wall2.sz = 0.1;
+
+    wall1.rotAngleXX = -60;
+    wall2.rotAngleXX = -60;
+
+    wall1.tx = -0.9; wall1.ty = 1; wall1.tz = globalTz;
+
+    wall2.tx = 0.9; wall2.ty = 1; wall2.tz = globalTz;
+
+     drawModel(wall1,
+        mvMatrix,
+        ice_texture);
+
+    drawModel(wall2,
+        mvMatrix,
+        ice_texture);
+
+    var player = sphereModel(3);
+    player.sx = 0.05; player.sy = 0.10; player.sz = 0.1;
+    player.rotAngleXX = 30;
+    player.tx = tm +velocity;
+    player.ty = -0.30;
+    player.tz = 0.6;
     player.TextureColor = [0.0,0.0,1.0,1.0];
     drawModel(player,
         mvMatrix,
         color_texture);
 
-
-
-    for(var i = 0; i < 1; i++ )
+    for(var i = 0; i < 4; i++ )
     {
-        if(count >= 250){
+        if(count >= 256){
             generate_model();
             count = 0;
         }
@@ -347,51 +379,43 @@ function drawScene() {
 
     for(var j = 0; j < sceneModels.length; j++){
 
-        sceneModels[j].TextureColor = [0.0,1.0,0.0,1.0];
         drawModel( sceneModels[j],
             mvMatrix,
-            color_texture );
-        sceneModels[j].tz += 0.04;
-        sceneModels[j].ty -= 0.02;
+            ice_texture );
+
+            sceneModels[j].tz += 0.04;
+            sceneModels[j].ty -= 0.02;
 
         if(sceneModels[j].tz >= 2.5){
             sceneModels.splice(j, 1);
         }
-        
-    
     }
 
     player_hit = detectHitBox(player);
 
-    var player_left = player_hit[0] - (player_hit[2]/2);
-    var player_right = player_hit[0] + (player_hit[2]/2);
-    var player_front = player_hit[1] - (player_hit[3]/2);
-    var player_rear = player_hit[1] + (player_hit[3]/2);
+    var player_left = 0;
+    var player_right = 0;
+    var player_front = player_hit[1] - (player_hit[3]/2) - globalTz ;
+    var player_rear = player_hit[1] + (player_hit[3]/2) ;
 
-    //console.log(player_right)
-    //console.log(player_left)
-    console.log(player_front)
-    console.log(player_rear)
 
     for(var k = 0; k<sceneModels.length; k++){
+        player_left = player_hit[0] - (player_hit[2]/2) - sceneModels[k].sx - 0.05;
+        player_right = (player_hit[0] + (player_hit[2]/2)) + sceneModels[0].sx + 0.05;
         var object_hit = detectHitBox(sceneModels[k]);
         var obj_left  = object_hit[0] - (object_hit[2]/2);
         var obj_right = object_hit[0] + (object_hit[2]/2);
         var obj_front = object_hit[1] - (object_hit[3]/2);
         var obj_rear  = object_hit[1] + (object_hit[3]/2);
-    //console.log(obj_right)
-    //console.log(obj_left)
-    console.log(obj_front)
-    console.log(obj_rear)
-        if( (player_right < obj_left*(-1)) || (obj_right < player_left*(-1))|| (player_rear < obj_front*(-1))|| (obj_rear < player_front)){ 
-             console.log("Resulta")
+
+        if( (player_right < obj_left * (-1)) || (obj_right * (-1) < player_left) ||  obj_rear < player_front){
+
         }else{
-            console.log("FODEU")
+            console.log("Resulta");
         }
     }
     
     countFrames();
-
 }
 
 
@@ -443,7 +467,6 @@ function handleKeys() {
             tm -= 0.01;
 
         velocity_dir = -1;
-
     }
     if (currentlyPressedKeys[39]) {
 

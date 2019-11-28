@@ -82,15 +82,17 @@ function initShaders( gl ) {
 	shaderProgram.textureCoordAttribute = gl.getAttribLocation(shaderProgram, "aTextureCoord");
 	gl.enableVertexAttribArray(shaderProgram.textureCoordAttribute);
 
-	// NEW --- The sampler
-
-	shaderProgram.samplerUniform = gl.getUniformLocation(shaderProgram, "uSampler");
-
 	// NEW --- Blending
 
 	shaderProgram.alphaUniform = gl.getUniformLocation(shaderProgram, "uAlpha");
 
 	shaderProgram.vertexColorUniform = gl.getUniformLocation(shaderProgram,"u_color");
+
+	// NEW --- The sampler
+
+	shaderProgram.samplerUniform = gl.getUniformLocation(shaderProgram, "uSampler");
+
+
 
 	return shaderProgram;
 }

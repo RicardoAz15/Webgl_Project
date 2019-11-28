@@ -103,12 +103,12 @@ function Plane( ) {
 	];
 
 	plane.textureCoords = [
-		0.0, 5.0,
-		5.0, 5.0,
-		5.0, 0.0,
+		0.0, 9.0,
+		1.0, 9.0,
+		1.0, 0.0,
 
-		0.0, 5.0,
-		5.0, 0.0,
+		0.0, 9.0,
+		1.0, 0.0,
 		0.0, 0.0,
 
 	];
@@ -125,46 +125,105 @@ function simpleCubeModel( ) {
 	var cube = new emptyModelFeatures();
 	
 	cube.vertices = [
-
 		-1.000000, -1.000000,  1.000000, 
 		 1.000000,  1.000000,  1.000000, 
-		-1.000000,  1.000000,  1.000000, 
+		-1.000000,  1.000000,  1.000000,
+
 		-1.000000, -1.000000,  1.000000,
 		 1.000000, -1.000000,  1.000000, 
-		 1.000000,  1.000000,  1.000000, 
+		 1.000000,  1.000000,  1.000000,
+		///////////////// done
          1.000000, -1.000000,  1.000000, 
 		 1.000000, -1.000000, -1.000000,
-		 1.000000,  1.000000, -1.000000, 
+		 1.000000,  1.000000, -1.000000,
+
          1.000000, -1.000000,  1.000000, 
          1.000000,  1.000000, -1.000000, 
          1.000000,  1.000000,  1.000000,
+		///////////////////////////// done
         -1.000000, -1.000000, -1.000000, 
         -1.000000,  1.000000, -1.000000,
-         1.000000,  1.000000, -1.000000, 
+         1.000000,  1.000000, -1.000000,
+
         -1.000000, -1.000000, -1.000000,
          1.000000,  1.000000, -1.000000, 
-         1.000000, -1.000000, -1.000000, 
-        -1.000000, -1.000000, -1.000000, 
+         1.000000, -1.000000, -1.000000,
+		///////////////////////////////////// done
+        -1.000000, -1.000000, -1.000000,
 		-1.000000, -1.000000,  1.000000,
 		-1.000000,  1.000000, -1.000000,
+
 		-1.000000, -1.000000,  1.000000, 
 		-1.000000,  1.000000,  1.000000, 
 		-1.000000,  1.000000, -1.000000,
+		/////////////////////////////// done
 		-1.000000,  1.000000, -1.000000,
 		-1.000000,  1.000000,  1.000000,
-		 1.000000,  1.000000, -1.000000, 
+		 1.000000,  1.000000, -1.000000,
+
 		-1.000000,  1.000000,  1.000000, 
 		 1.000000,  1.000000,  1.000000,
 		 1.000000,  1.000000, -1.000000,
+		////////////////////////////////done
 		-1.000000, -1.000000,  1.000000, 
 		-1.000000, -1.000000, -1.000000,
-		 1.000000, -1.000000, -1.000000, 
+		 1.000000, -1.000000, -1.000000,
+
 		-1.000000, -1.000000,  1.000000, 
 		 1.000000, -1.000000, -1.000000, 
 		 1.000000, -1.000000,  1.000000, 	 
 	];
 
-	cube.textureCoords = new Array(cube.vertices.length * 3).fill(0);
+	cube.textureCoords =
+		[   1.0, 0.0,
+			0.0, 1.0,
+			0.0, 0.0,
+//
+		1.0, 0.0,
+		1.0, 1.0,
+		0.0, 1.0,
+//////// done
+		1.0, 0.0,
+		1.0, 2.0,
+		0.0, 2.0,
+//
+		1.0, 0.0,
+		0.0, 2.0,
+		0.0, 0.0,
+//////// done
+		1.0, 0.0,
+		0.0, 0.0,
+		0.0, 1.0,
+
+		1.0, 0.0,
+		0.0, 1.0,
+		1.0, 1.0,
+///////// done
+		1.0, 0.0,
+		1.0, 2.0,
+		0.0, 0.0,
+
+		1.0, 2.0,
+		0.0, 2.0,
+		0.0, 0.0,
+//////// done
+		0.0, 0.0,
+		1.0, 0.0,
+		0.0, 1.0,
+
+		1.0, 0.0,
+		1.0, 1.0,
+		0.0, 1.0,
+////////
+		0.0, 0.0,
+		0.0, 0.0,
+		0.0, 0.0,
+
+		0.0, 0.0,
+		0.0, 0.0,
+		0.0, 0.0,
+///////
+	];
 
 	computeVertexNormals( cube.vertices, cube.normals );
 
@@ -172,7 +231,7 @@ function simpleCubeModel( ) {
 }
 
 
-function cubeModel( subdivisionDepth = 0 ) {
+/*function cubeModel( subdivisionDepth = 0 ) {
 	
 	var cube = new simpleCubeModel();
 	
@@ -181,10 +240,10 @@ function cubeModel( subdivisionDepth = 0 ) {
 	computeVertexNormals( cube.vertices, cube.normals );
 	
 	return cube;
-}
+}*/
 
 
-function simpleTetrahedronModel( ) {
+/*function simpleTetrahedronModel( ) {
 	
 	var tetra = new emptyModelFeatures();
 	
@@ -207,20 +266,7 @@ function simpleTetrahedronModel( ) {
 	computeVertexNormals( tetra.vertices, tetra.normals );
 
 	return tetra;
-}
-
-
-function tetrahedronModel( subdivisionDepth = 0 ) {
-	
-	var tetra = new simpleTetrahedronModel();
-	
-	midPointRefinement( tetra.vertices, subdivisionDepth );
-	
-	computeVertexNormals( tetra.vertices, tetra.normals );
-	
-	return tetra;
-}
-
+}*/
 
 function sphereModel( subdivisionDepth = 4 ) {
 	
@@ -252,7 +298,7 @@ function generate_model(){
 // Model 0 --- Top Left
 	var model = available_Models[Math.round(random_number(0,0))];
 
-	model.tx = random_number(0,0); model.ty = 3.6;
+	model.tx = random_number(-0.7,0.7); model.ty = 3.6;
 	model.tz = -7;
 
 	model.rotAngleXX = 30;
@@ -275,9 +321,9 @@ function detectHitBox(model){
 
     	for(var i = 0; i < model.vertices.length; i+=3){
     		var vector = vec4();
-    		vector[0] = model.vertices[i]   + model.tx;
-    		vector[1] = model.vertices[i+1] + model.ty;
-    		vector[2] = model.vertices[i+2] + model.tz;
+    		vector[0] = (model.vertices[i]   + model.tx);
+    		vector[1] = (model.vertices[i+1] + model.ty);
+    		vector[2] = (model.vertices[i+2] + model.tz);
 
 	    	if(vector[0] > maxXX){
 				maxXX = vector[0];
@@ -294,8 +340,8 @@ function detectHitBox(model){
     	}
     	
 	var boxCenter = vec4();
-	boxCenter[0] = (minXX + maxXX)*1.0 / 2;
-	boxCenter[2] = (minZZ + maxZZ)*1.0 / 2;
+	boxCenter[0] = (minXX + maxXX) / 2;
+	boxCenter[2] = (minZZ + maxZZ) / 2;
 
 	var widthXX = maxXX - minXX;
 	var widthZZ = maxZZ - minZZ;
