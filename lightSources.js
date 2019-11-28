@@ -168,7 +168,7 @@ var lightSources = [];
 
 lightSources.push( new LightSource() );
 
-lightSources[0].setPosition( -0.5, 0.0, 2.0, 0.0 );
+lightSources[0].setPosition( 0.7, 2.0, 3.0, 0.0 );
 
 lightSources[0].setIntensity( 1.0, 1.0, 1.0 );
 

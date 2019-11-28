@@ -298,7 +298,7 @@ function generate_model(){
 // Model 0 --- Top Left
 	var model = available_Models[Math.round(random_number(0,0))];
 
-	model.tx = random_number(-0.7,0.7); model.ty = 3.6;
+	model.tx = random_number(-0.65,0.65); model.ty = 3.6;
 	model.tz = -7;
 
 	model.rotAngleXX = 30;

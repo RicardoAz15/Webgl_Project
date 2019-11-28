@@ -198,7 +198,6 @@ function drawModel(model,
 
     mvMatrix = mult(mvMatrix, translationMatrix(model.tx, model.ty, model.tz));
 
-    mvMatrix = mult(mvMatrix, rotationYYMatrix(model.rotAngleYY));
      mvMatrix = mult(mvMatrix, rotationXXMatrix(model.rotAngleXX));
 
     mvMatrix = mult(mvMatrix, scalingMatrix(model.sx, model.sy, model.sz));
@@ -263,6 +262,8 @@ function drawModel(model,
 
 //  Drawing the 3D scene
 
+var point = 0;
+
 function drawScene() {
 
     gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
@@ -300,9 +301,9 @@ function drawScene() {
     var t_total = tm + velocity;
     on_wall = our_abs(t_total) >= 0.6;
 
-    /*if (!is_moving && !on_wall) {
+    if (!is_moving && !on_wall) {
 		velocity += velocity_dir*0.005;
-	}*/
+	}
 
     for(var i = 0; i < lightSources.length; i++ )
     {
@@ -368,7 +369,7 @@ function drawScene() {
         mvMatrix,
         color_texture);
 
-    for(var i = 0; i < 4; i++ )
+    for(var i = 0; i < 8; i++ )
     {
         if(count >= 256){
             generate_model();
@@ -383,11 +384,13 @@ function drawScene() {
             mvMatrix,
             ice_texture );
 
-            sceneModels[j].tz += 0.04;
-            sceneModels[j].ty -= 0.02;
+        sceneModels[j].tz += 0.04;
+        sceneModels[j].ty -= 0.02;
 
-        if(sceneModels[j].tz >= 2.5){
-            sceneModels.splice(j, 1);
+        if(sceneModels[j].tz >= 2.7){
+            point+=50;
+            sceneModels.splice(j,1);
+            console.log(point)
         }
     }
 
@@ -395,23 +398,28 @@ function drawScene() {
 
     var player_left = 0;
     var player_right = 0;
-    var player_front = player_hit[1] - (player_hit[3]/2) - globalTz ;
-    var player_rear = player_hit[1] + (player_hit[3]/2) ;
+    var player_front = 0;
+    var player_rear =  0;
 
+    for(var k = 0; k<sceneModels.length ; k++){
+        player_left = player_hit[0] - (player_hit[2]/2) - sceneModels[0].sx + 0.96 ;
+        player_right = (player_hit[0] + (player_hit[2]/2)) + sceneModels[0].sx -0.96;
+        player_front = player_hit[1] - (player_hit[3]/2) - globalTz - sceneModels[0].sz - sceneModels[0].sy;
+        player_rear = player_hit[1] + (player_hit[3]/2) + globalTz + sceneModels[0].sz + sceneModels[0].sy;
 
-    for(var k = 0; k<sceneModels.length; k++){
-        player_left = player_hit[0] - (player_hit[2]/2) - sceneModels[k].sx - 0.05;
-        player_right = (player_hit[0] + (player_hit[2]/2)) + sceneModels[0].sx + 0.05;
         var object_hit = detectHitBox(sceneModels[k]);
-        var obj_left  = object_hit[0] - (object_hit[2]/2);
-        var obj_right = object_hit[0] + (object_hit[2]/2);
+        var obj_left  = object_hit[0] - (object_hit[2]/2) + 1;
+        var obj_right = object_hit[0] + (object_hit[2]/2) - 1;
         var obj_front = object_hit[1] - (object_hit[3]/2);
         var obj_rear  = object_hit[1] + (object_hit[3]/2);
 
-        if( (player_right < obj_left * (-1)) || (obj_right * (-1) < player_left) ||  obj_rear < player_front){
+        /*console.log(obj_rear);
+        console.log(player_front);*/
 
+        if( (player_right < obj_left )  || (obj_right < player_left) || (player_rear < obj_front) ||  obj_rear < player_front){
         }else{
-            console.log("Resulta");
+            sceneModels[k].TextureColor = [1.0,0.0,0.0,1.0];
+            console.log("FODEU")
         }
     }
     
